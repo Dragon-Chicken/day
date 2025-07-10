@@ -25,10 +25,13 @@ day is a wrapper for dnf, copr and flatpak
             i:
                 Searches for package(s) then installs them
             I:
-                Immediately tries to install package(s)
+                Tries to install package(s) without searching
         
-        -r(emove)
-            Remove package(s)
+        -r/R(emove)
+            r:
+                Searchs for installed package(s) then remove them
+            R:
+                Tries to remove package(s) without searching
         
         -c(opr)
             Tells day to use copr instead of dnf
@@ -43,10 +46,17 @@ day is a wrapper for dnf, copr and flatpak
             Upgrade the whole system
     
     TERMS
-        you can think of them as
-        dnf install __terms__
+        You can think of them as:
+        dnf install terms
+                    ^^^^^
     
     EXAMPLES
         Example of installing bspwm, sxhkd and polybar
 
-        day -i
+        Search for packages then install:
+        day -i bspwm sxhkd polybar
+
+        or
+
+        Don't search but still install:
+        day -I bspwm sxhkd polybar
