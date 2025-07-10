@@ -7,7 +7,7 @@ upgradeflag=0
 
 coprflag=0
 
-
+nosearch=0
 
 #########
 # FLAGS #
@@ -19,20 +19,37 @@ fi
 
 for (( i=0; i<${#1}; i++ )); do
   char="${1:i:1}"
-  if [ $char = "i" ]; then
-    installflag=1
-  elif [ $char = "r" ]; then
-    removeflag=1
-  elif [ $char = "u" ]; then
-    upgradeflag=1
-  elif [ $char = "q" ]; then
-    searchflag=1
-  elif [ $char = "c" ]; then
-    coprflag=1
-  else
-    echo "invalid argument(s)"
-    return
-  fi
+  
+  case $char in
+    "i" | "I")
+      installflag=1
+
+      if [ $char = "I" ]; then
+        nosearch=1
+      fi
+    ;;
+
+    "r")
+      removeflag=1
+    ;;
+
+    "u")
+      upgradeflag=1
+    ;;
+
+    "q")
+      searchflag=1
+    ;;
+
+    "c")
+      coprflag=1
+    ;;
+
+    *)
+      echo "invalid argument(s)"
+      return
+    ;;
+  esac
 done
 
 ##########
@@ -85,7 +102,7 @@ if [ $installflag -eq 1 ]; then
 
   i=1
   for input in "$@"; do
-    if [ $i -ne 1 ]; then
+    if [ $i -ne 1 ] && [ $nosearch -eq 0 ]; then
       #echo "package: $input"
 
       grepout=$(dnf -q search $input | grep -i $input)
@@ -123,7 +140,10 @@ if [ $installflag -eq 1 ]; then
 
       installstring+="$packagetoinstall "
 
+    elif [ $i -ne 1 ]; then
+      installstring+="$input "
     fi
+
     i+=1
   done
   
@@ -132,8 +152,10 @@ if [ $installflag -eq 1 ]; then
   echo "|$installstring|"
 
   sudo dnf install $installstring
-  
+
+  return
 fi
+
 ##########
 # REMOVE #
 ##########
@@ -141,7 +163,6 @@ if [ $removeflag -eq 1 ]; then
   #dnf list --installed | grep -i $2
 
   removestring=""
-  
   echo "searching for package(s)"
 
   i=1
@@ -173,7 +194,6 @@ if [ $removeflag -eq 1 ]; then
           else
             validinput=1
           fi
-
         done
       fi
 
@@ -183,7 +203,6 @@ if [ $removeflag -eq 1 ]; then
       #packagetoremove=${packagetoremove:1}
 
       removestring+="$packagetoremove "
-
     fi
     i+=1
   done
@@ -193,4 +212,6 @@ if [ $removeflag -eq 1 ]; then
   echo "|$removestring|"
 
   sudo dnf remove $removestring
+
+  return
 fi
