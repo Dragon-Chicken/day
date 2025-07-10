@@ -35,6 +35,32 @@ for (( i=0; i<${#1}; i++ )); do
   fi
 done
 
+##########
+# SEARCH #
+##########
+if [ $searchflag -eq 1 ]; then
+  searchstring=""
+
+  i=1
+  for input in "$@"; do
+    if [ $i -ne 1 ]; then
+
+      searchstring+="$input "
+
+    fi
+    i+=1
+  done
+  
+  searchstring=${searchstring% }
+  coprsearchstring=$(echo "$searchstring" | sed "s/\//%2F/g" | sed "s/\ /+/g")
+
+  echo "copr search: "
+  echo "https://copr.fedorainfracloud.org/coprs/fulltext/?fulltext=$coprsearchstring"
+
+  echo "dnf search: "
+  dnf search "$searchstring"
+fi
+
 ################
 # COPR INSTALL #
 # I hate copr. #
@@ -108,33 +134,6 @@ if [ $installflag -eq 1 ]; then
   sudo dnf install $installstring
   
 fi
-
-##########
-# SEARCH #
-##########
-if [ $searchflag -eq 1 ]; then
-  searchstring=""
-
-  i=1
-  for input in "$@"; do
-    if [ $i -ne 1 ]; then
-
-      searchstring+="$input "
-
-    fi
-    i+=1
-  done
-  
-  searchstring=${searchstring% }
-  coprsearchstring=$(echo "$searchstring" | sed "s/\//%2F/g" | sed "s/\ /+/g")
-
-  echo "copr search: "
-  echo "https://copr.fedorainfracloud.org/coprs/fulltext/?fulltext=$coprsearchstring"
-
-  echo "dnf search: "
-  dnf search "$searchstring"
-fi
-
 ##########
 # REMOVE #
 ##########
