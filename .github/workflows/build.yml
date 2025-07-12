@@ -26,19 +26,17 @@ jobs:
           platforms: aarch64
 
       - name: Build executable
-        uses: uraimo/run-on-arch-action@v3
-        with:
-          arch: ${{ matrix.arch }}
-          distro: fedora_latest
-          githubToken: ${{ github.token }}
-          install: |
-            dnf install -y python3 python3-pip python3-devel dnf5
-            pip install pyinstaller requests beautifulsoup4 termcolor
-          run: |
-            pyinstaller --onefile --name day-${{ matrix.arch }} day.py
-            mv dist/day-${{ matrix.arch }} /artifacts/
-          dockerRunArgs: |
-            --volume "${PWD}/dist:/artifacts"
+        run: |
+          docker run --rm --platform linux/${{ matrix.arch == 'x86_64' && 'amd64' || 'arm64' }} \
+            -v ${{ github.workspace }}:/io quay.io/fedora/fedora:39 \
+            /bin/bash -c "
+              set -x &&
+              dnf install -y python3 python3-pip python3-devel dnf5 &&
+              pip install pyinstaller requests beautifulsoup4 termcolor &&
+              cd /io &&
+              pyinstaller --onefile --name day-${{ matrix.arch }} day.py &&
+              mv dist/day-${{ matrix.arch }} /io/dist/
+            "
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
