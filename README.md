@@ -1,62 +1,64 @@
-# day
+# day (temp name)
 
 day is a wrapper for dnf, copr and flatpak
 
 # man page
 
-    NAME
-        day - [temp name]
+```
+NAME
+    day (temp name) - no subtitle
+
+SYNOPSIS
+    day ARGS TERMS
+
+    day ARGS TERMS ARGS TERMS
+
+DESCRIPTION
+    day is a wrapper for dnf, copr and flatpak
+
+    You can use any number of args and terms
+
+ARGS
+    -h(elp)
+        print the help text
     
-    SYNOPSIS
-        day ARGS TERMS
-
-        day ARGS TERMS ARGS TERMS
+    -i/I(nstall)
+        i:
+            Searches for package(s) then installs them
+        I:
+            Tries to install package(s) without searching
     
-    DESCRIPTION
-        day is a wrapper for dnf, copr and flatpak
-
-        You can use any number of args and terms
-
-    ARGS
-        -h(elp)
-            print the help text
-        
-        -i/I(nstall)
-            i:
-                Searches for package(s) then installs them
-            I:
-                Tries to install package(s) without searching
-        
-        -r/R(emove)
-            r:
-                Searchs for installed package(s) then remove them
-            R:
-                Tries to remove package(s) without searching
-        
-        -c(opr)
-            Tells day to use copr instead of dnf
-        
-        -f(atpak)
-            Tells day to use flatpak instead of dnf
-        
-        -q(uery)
-            Search for a package
-        
-        -u(pgrade)
-            Upgrade the whole system
+    -r/R(emove)
+        r:
+            Searchs for installed package(s) then remove them
+        R:
+            Tries to remove package(s) without searching
     
-    TERMS
-        You can think of them as:
-        dnf install terms
-                    ^^^^^
+    -c(opr)
+        Tells day to use copr instead of dnf
     
-    EXAMPLES
-        Example of installing bspwm, sxhkd and polybar
+    -f(atpak)
+        Tells day to use flatpak instead of dnf
+    
+    -q(uery)
+        Search for a package
+    
+    -u(pgrade)
+        Upgrade the whole system
 
-        Search for packages then install:
-        day -i bspwm sxhkd polybar
+TERMS
+    You can think of them as:
+    dnf install terms
+                ^^^^^
 
-        or
+EXAMPLES
+    Example of installing bspwm, sxhkd and polybar
 
-        Don't search but still install:
-        day -I bspwm sxhkd polybar
+    Search for packages then install:
+    day -i bspwm sxhkd polybar
+
+    OR
+
+    Don't search but still install:
+    day -I bspwm sxhkd polybar
+```

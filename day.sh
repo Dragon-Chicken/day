@@ -72,7 +72,7 @@ if [ $searchflag -eq 1 ]; then
   coprsearchstring=$(echo "$searchstring" | sed "s/\//%2F/g" | sed "s/\ /+/g")
 
   echo "copr search: "
-  echo "https://copr.fedorainfracloud.org/coprs/fulltext/?fulltext=$coprsearchstring"
+  echo "https://copr.fedorainfracloud.org/coprs/fulltext/?projectname=$coprsearchstring"
 
   echo "dnf search: "
   dnf search "$searchstring"
@@ -103,7 +103,6 @@ if [ $installflag -eq 1 ]; then
   i=1
   for input in "$@"; do
     if [ $i -ne 1 ] && [ $nosearch -eq 0 ]; then
-      #echo "package: $input"
 
       grepout=$(dnf -q search $input | grep -i $input)
 
@@ -113,14 +112,14 @@ if [ $installflag -eq 1 ]; then
       fi
       
       grepoutlines=$(dnf -q search $input | grep -c -i $input)
-      #echo $grepoutlines
+      #echo $grepoutlines # debug
       
       option=0
       validinput=0
 
       if [ $grepoutlines -gt 1 ]; then
         while [ $validinput -ne 1 ]; do
-          echo "select an option:"
+          echo "Select an option:"
           echo "$grepout"
           read -p "> " option 
 
@@ -149,7 +148,7 @@ if [ $installflag -eq 1 ]; then
   
   installstring=${installstring% }
 
-  echo "|$installstring|"
+  echo "|$installstring|" #debug
 
   sudo dnf install $installstring
 
@@ -160,24 +159,23 @@ fi
 # REMOVE #
 ##########
 if [ $removeflag -eq 1 ]; then
-  #dnf list --installed | grep -i $2
 
   removestring=""
+
   echo "searching for package(s)"
 
   i=1
   for input in "$@"; do
     if [ $i -ne 1 ]; then
-      #echo "package: $input"
 
-      grepout=$(dnf -q list --installed "*$input*" | grep -i $input)
+      grepout=$(dnf -q list --installed "*$input*" | grep -i "$input")
 
       if [ -z "$grepout" ]; then
         echo "Can't find package: $input"
         return
       fi
       
-      grepoutlines=$(dnf -q list --installed "*$input*" | grep -c -i $input)
+      grepoutlines=$(dnf -q list --installed "*$input*" | grep -c -i "$input")
       #echo $grepoutlines
 
       option=0
@@ -185,7 +183,7 @@ if [ $removeflag -eq 1 ]; then
 
       if [ $grepoutlines -gt 1 ]; then
         while [ $validinput -ne 1 ]; do
-          echo "select an option:"
+          echo "Select an option:"
           echo "$grepout"
           read -p "> " option 
 
@@ -203,15 +201,29 @@ if [ $removeflag -eq 1 ]; then
       #packagetoremove=${packagetoremove:1}
 
       removestring+="$packagetoremove "
+
+      # copr stuff...
+      if ! [ -z "$(dnf copr list | grep "$packagetoremove")" ]; then
+        echo "Package $packagetoremove was installed with copr."
+        read -p "Remove the copr repo? [Y/n]: " option
+
+        coprrepotoremove=$(dnf copr list | grep "$packagetoremove")
+        #echo "${coprrepotoremove#*/}"
+        #sudo dnf copr remove "${coprrepotoremove#*/}"
+
+      fi
+
     fi
     i+=1
   done
   
   removestring=${removestring% }
 
-  echo "|$removestring|"
+  #echo "|$removestring|" # debug
 
-  sudo dnf remove $removestring
+  #sudo dnf remove $removestring
+
+  # copr stuff...
 
   return
 fi
