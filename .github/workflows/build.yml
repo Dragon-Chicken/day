@@ -31,14 +31,21 @@ jobs:
             -v ${{ github.workspace }}:/io quay.io/fedora/fedora:39 \
             /bin/bash -c "
               set -x &&
-              dnf install -y python3 python3-pip python3-devel dnf5 binutils &&
+              dnf install -y --refresh python3 python3-pip python3-devel dnf5 binutils &&
               python3 -m venv /io/venv &&
               source /io/venv/bin/activate &&
-              pip install --no-cache-dir pyinstaller==5.13.2 requests beautifulsoup4 termcolor &&
+              pip install --no-cache-dir --upgrade pip &&
+              pip install --no-cache-dir pyinstaller==5.13.2 setuptools<81 requests beautifulsoup4 termcolor &&
               cd /io &&
-              pyinstaller --onefile --name day-${{ matrix.arch }} day.py &&
-              ldd dist/day-${{ matrix.arch }} | grep libssl || echo 'No libssl dependency' &&
-              mv dist/day-${{ matrix.arch }} /io/dist/
+              echo 'Creating hook-day.py for subprocess' &&
+              cat > hook-day.py << 'EOF'
+              from PyInstaller.utils.hooks import collect_submodules
+              hiddenimports = collect_submodules('subprocess')
+              EOF
+              pyinstaller --onefile --name day-${{ matrix.arch }} --add-hook-dir . day.py &&
+              ldd dist/day-${{ matrix.arch }} &&
+              echo 'Verifying dnf5 dependencies' &&
+              ldd \$(which dnf5) | grep -E 'libssl|libcurl' || echo 'No libssl/libcurl in dnf5'
             "
 
       - name: Test executable
@@ -46,7 +53,9 @@ jobs:
           docker run --rm --platform linux/${{ matrix.arch == 'x86_64' && 'amd64' || 'arm64' }} \
             -v ${{ github.workspace }}:/io quay.io/fedora/fedora:39 \
             /bin/bash -c "
-              /io/dist/day-${{ matrix.arch }} --help
+              set -x &&
+              dnf install -y dnf5 &&
+              /io/dist/day-${{ matrix.arch }} --help &&
               /io/dist/day-${{ matrix.arch }} history list
             "
 
