@@ -37,13 +37,16 @@ jobs:
               pip install --no-cache-dir --upgrade pip &&
               pip install --no-cache-dir pyinstaller==5.13.2 setuptools\<81 requests beautifulsoup4 termcolor &&
               cd /io &&
-              echo 'Creating hook-day.py for subprocess' &&
+              echo 'Creating hook-day.py for subprocess and dependencies' &&
               cat > hook-day.py << 'EOF'
               from PyInstaller.utils.hooks import collect_submodules
               hiddenimports = collect_submodules('subprocess') + collect_submodules('requests') + collect_submodules('bs4') + collect_submodules('termcolor')
               EOF
+              ls -l /io &&
               pyinstaller --onefile --name day-${{ matrix.arch }} --add-hook-dir . day.py &&
-              ldd dist/day-${{ matrix.arch }} &&
+              ls -l /io/dist/ &&
+              chmod +x /io/dist/day-${{ matrix.arch }} &&
+              ldd /io/dist/day-${{ matrix.arch }} &&
               echo 'Verifying dnf5 dependencies' &&
               ldd \$(which dnf5) | grep -E 'libssl|libcurl' || echo 'No libssl/libcurl in dnf5'
             "
@@ -55,6 +58,7 @@ jobs:
             /bin/bash -c "
               set -x &&
               dnf install -y dnf5 &&
+              ls -l /io/dist/ &&
               /io/dist/day-${{ matrix.arch }} --help &&
               /io/dist/day-${{ matrix.arch }} history list
             "
