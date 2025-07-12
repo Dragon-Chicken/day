@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import subprocess  # Added explicitly to avoid NameError
 from src.parser import create_parser
 from src.utils import check_root_permissions
 from src.handlers import handle_search, handle_install, handle_remove
