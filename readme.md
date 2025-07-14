@@ -20,8 +20,8 @@
 
 ## Table Of Contents
 - [Features](#Features)
-- [Manual](#Manual)
 - [Installation](#Installation)
+- [Manual](#Manual)
 
 ## Features
 
@@ -46,7 +46,6 @@ pythob3-termcolor
 dnf5
 pyinstaller
 ```
-Then run `day.py`
 <br>
 For installation on just build it and put it in your `/bin`
 ```sh
