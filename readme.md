@@ -7,7 +7,8 @@
   <br>
   <a href="https://github.com/Dragon-Chicken/day">
     <img src="https://img.shields.io/github/repo-size/Dragon-Chicken/day?color=6E93CC&labelColor=1a1e29&style=for-the-badge">
-  </a> 
+  </a>
+  <br>
   <sub>Welpyes, Dragon.chicken (2025)</sub>
 </div>
 
