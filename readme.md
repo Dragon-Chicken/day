@@ -5,6 +5,9 @@
   <br>
   <b>DAY - Dnf Assisted Yank. A fast multitool wrapper for the DNF package manager</b>
   <br>
+  <a href="https://github.com/Dragon-Chicken/day">
+    <img src="https://img.shields.io/github/repo-size/Dragon-Chicken/day?color=6E93CC&labelColor=1a1e29&style=for-the-badge">
+  </a> 
   <sub>Welpyes, Dragon.chicken (2025)</sub>
 </div>
 
