@@ -48,6 +48,7 @@ pyinstaller
 ```
 <br>
 For installation on just build it and put it in your `/bin`
+
 ```sh
 pyinstaller --onefile --name day day.py
 mv day /bin
