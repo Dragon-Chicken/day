@@ -40,16 +40,14 @@ python3-requests
 python3-beautifulsoup
 pythob3-termcolor
 dnf5
+pyinstaller
 ```
 Then run `day.py`
 <br>
-For installation on `$PATH` you can symlink it to your bin directory
+For installation on just build it and put it in your `/bin`
 ```sh
-for local bin directory
-ln -s day.py ~/.local/bin/day
-
-for global bin directory
-ln -s day.py /bin/day
+pyinstaller --onefile --name day day.py
+mv day /bin
 ```
 
 
@@ -62,14 +60,14 @@ DAY(1)                            Day Manual                            DAY(1)
 
 NAME
        day - Dnf Assisted Yank, A dnf wrapper with
-       quality of life fearures
+       quality of life features
 
 SYNOPSIS
        day [--help] [--help-dnf] [command] [arguments...]
 
 DESCRIPTION
        Day is a Python-based dnf wrapper for RPM-based Linux Distributions.
-       It integrates Copr features namely the Search fucntion to the dnf
+       It integrates Copr features namely the Search function to the dnf
        Package Manager and installs copr projects found in
        https://copr.fedorainfracloud.org with ease
 
