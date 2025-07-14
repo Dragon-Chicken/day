@@ -186,8 +186,8 @@ SEE ALSO
 
 ## Thanks & Inspiration
 
-- [Paru](link) – Helper Idea 
-- [sowm](link) – Readme Inspiration
+- [Paru](https://github.com/Morganamilo/paru) – Helper Idea 
+- [sowm](https://github.com/dylanaraps/sowm) – Readme Inspiration
 
 --- 
 <p align="center">
