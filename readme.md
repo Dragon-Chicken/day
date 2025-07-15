@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/github/repo-size/Dragon-Chicken/day?color=6E93CC&labelColor=1a1e29&style=for-the-badge">
   </a>
   <br>
-  <sub>Welpyes, Dragonchicken (2025)</sub>
+  <sub>Welpyes, DragonChicken (2025)</sub>
 </div>
 
 ---
