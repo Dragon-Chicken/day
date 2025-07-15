@@ -3,8 +3,7 @@ import os
 import configparser
 from .copr import search_copr
 
-def get_default_yes():
-    """Read defaultyes from /etc/dnf/dnf.conf and return True if set to 'True'."""
+def defaultyes():
     config = configparser.ConfigParser()
     try:
         config.read('/etc/dnf/dnf.conf')
@@ -12,15 +11,37 @@ def get_default_yes():
     except (configparser.Error, FileNotFoundError):
         return False
 
-def confirm_action(prompt, default_yes=False):
-    """Prompt user for confirmation with (Y/n) or (y/N) based on default_yes."""
+def prompt(message, default_yes=False):
     suffix = "(Y/n)" if default_yes else "(y/N)"
-    response = input(f"{prompt} {suffix}: ").strip().lower()
-    if default_yes:
-        return response in ("y", "")  # Default to Yes
-    return response == "y"  # Default to No
+    response = input(f"{message} {suffix}: ").strip().lower()
+    return response in ("y", "") if default_yes else response == "y"
 
-def handle_search(query):
+def _run_dnf_command(command, timeout=300):
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env={**os.environ, "PYTHONUNBUFFERED": "1"}
+    )
+    while True:
+        stdout_line = process.stdout.readline()
+        stderr_line = process.stderr.readline()
+        if stdout_line:
+            print(stdout_line, end='', flush=True)
+        if stderr_line:
+            print(stderr_line, end='', flush=True)
+        if process.poll() is not None and not stdout_line and not stderr_line:
+            break
+    stdout, stderr = process.communicate()
+    if stdout:
+        print(stdout, end='', flush=True)
+    if stderr:
+        print(stderr, end='', flush=True)
+    if process.returncode != 0:
+        raise subprocess.CalledProcessError(process.returncode, command, stdout, stderr)
+
+def search(query):
     try:
         result = subprocess.run(
             ["dnf5", "search", "--color=always", query],
@@ -32,104 +53,58 @@ def handle_search(query):
     except subprocess.CalledProcessError as e:
         if "No match for argument:" in e.stderr:
             print("No packages found in standard repositories.")
-            response = input("Would you like to search COPR repositories? (Y/n): ").strip().lower()
-            if response in ("y", ""):
+            if prompt("Search COPR repositories?", default_yes=True):
                 search_copr(query)
         else:
-            print(f"Error during search: {e.stderr}")
+            print(f"Search failed: {e.stderr}")
 
-def handle_install(packages):
-    default_yes = get_default_yes()
+def install(packages):
+    default_yes = defaultyes()
     copr_projects = []
     install_list = []
 
     for pkg in packages:
         if '/' in pkg:
             copr_projects.append(pkg)
-            package_name = pkg.split('/')[-1]
-            install_list.append(package_name)
+            install_list.append(pkg.split('/')[-1])
         else:
             install_list.append(pkg)
 
     for project in copr_projects:
-        if not confirm_action(f"Enable COPR project {project}?", default_yes):
-            print(f"Skipped enabling COPR project {project}.")
+        if not prompt(f"Enable COPR project {project}?", default_yes):
+            print(f"Skipped COPR project {project}.")
             return
         try:
             print(f"Enabling COPR project {project}...")
-            process = subprocess.Popen(
-                ["dnf5", "copr", "enable", "--color=always", project, "-y"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                env={**os.environ, "PYTHONUNBUFFERED": "1"}
-            )
-            while True:
-                stdout_line = process.stdout.readline()
-                stderr_line = process.stderr.readline()
-                if stdout_line:
-                    print(stdout_line, end='', flush=True)
-                if stderr_line:
-                    print(stderr_line, end='', flush=True)
-                if process.poll() is not None and not stdout_line and not stderr_line:
-                    break
-            stdout, stderr = process.communicate()
-            if stdout:
-                print(stdout, end='', flush=True)
-            if stderr:
-                print(stderr, end='', flush=True)
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, process.args, stdout, stderr)
+            _run_dnf_command(["dnf5", "copr", "enable", "--color=always", project, "-y"], timeout=30)
         except subprocess.CalledProcessError as e:
-            print(f"Error enabling COPR project {project}: {e.stderr}")
+            print(f"Failed to enable COPR project {project}: {e.stderr}")
             return
         except subprocess.TimeoutExpired:
-            print(f"Error: Timed out enabling COPR project {project}.")
+            print(f"Timed out enabling COPR project {project}.")
             return
 
-    if not confirm_action(f"Install packages: {' '.join(install_list)}?", default_yes):
+    if not prompt(f"Install packages: {' '.join(install_list)}?", default_yes):
         print("Installation cancelled.")
         return
 
     try:
         print(f"Installing packages: {' '.join(install_list)}...")
-        process = subprocess.Popen(
-            ["dnf5", "install", "--color=always"] + install_list + ["-y"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            env={**os.environ, "PYTHONUNBUFFERED": "1"}
-        )
-        while True:
-            stdout_line = process.stdout.readline()
-            stderr_line = process.stderr.readline()
-            if stdout_line:
-                print(stdout_line, end='', flush=True)
-            if stderr_line:
-                print(stderr_line, end='', flush=True)
-            if process.poll() is not None and not stdout_line and not stderr_line:
-                break
-        stdout, stderr = process.communicate()
-        if stdout:
-            print(stdout, end='', flush=True)
-        if stderr:
-            print(stderr, end='', flush=True)
-        if process.returncode != 0:
-            raise subprocess.CalledProcessError(process.returncode, process.args, stdout, stderr)
+        _run_dnf_command(["dnf5", "install", "--color=always"] + install_list + ["-y"])
     except subprocess.CalledProcessError as e:
-        print(f"Error installing packages: {e.stderr}")
+        print(f"Installation failed: {e.stderr}")
     except subprocess.TimeoutExpired:
-        print("Error: Package installation timed out.")
+        print("Installation timed out.")
 
-def handle_remove(packages, force):
-    default_yes = get_default_yes()
+def remove(packages, force):
+    default_yes = defaultyes()
     lock_file = "/var/lib/dnf/rpm.lock"
     if not force and os.path.exists(lock_file):
-        print(f"Error: DNF database is locked ({lock_file}). Another process may be using DNF.")
-        print("Try waiting a moment or run 'sudo rm -f /var/lib/dnf/rpm.lock' if you're sure no other DNF process is running.")
+        print(f"DNF database locked at {lock_file}. Another process may be using DNF.")
+        print("Wait a moment or run 'sudo rm -f /var/lib/dnf/rpm.lock' if safe.")
         return
 
-    if not confirm_action(f"Remove packages: {' '.join(packages)}?", default_yes):
+    if not prompt(f"Remove packages: {' '.join(packages)}?", default_yes):
         print("Removal cancelled.")
         return
 
@@ -139,7 +114,7 @@ def handle_remove(packages, force):
             for pkg in packages:
                 result = subprocess.run(["rpm", "-q", pkg], capture_output=True, text=True)
                 if result.returncode != 0:
-                    print(f"Error: Package {pkg} is not installed.")
+                    print(f"Package {pkg} is not installed.")
                     return
             process = subprocess.Popen(
                 ["rpm", "-e", "--nodeps"] + packages,
@@ -156,32 +131,10 @@ def handle_remove(packages, force):
                 raise subprocess.CalledProcessError(process.returncode, process.args, stdout, stderr)
         else:
             print(f"Removing packages with DNF: {' '.join(packages)}...")
-            process = subprocess.Popen(
-                ["dnf5", "remove", "--color=always", "-y"] + packages,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                env={**os.environ, "PYTHONUNBUFFERED": "1"}
-            )
-            while True:
-                stdout_line = process.stdout.readline()
-                stderr_line = process.stderr.readline()
-                if stdout_line:
-                    print(stdout_line, end='', flush=True)
-                if stderr_line:
-                    print(stderr_line, end='', flush=True)
-                if process.poll() is not None and not stdout_line and not stderr_line:
-                    break
-            stdout, stderr = process.communicate()
-            if stdout:
-                print(stdout, end='', flush=True)
-            if stderr:
-                print(stderr, end='', flush=True)
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, process.args, stdout, stderr)
+            _run_dnf_command(["dnf5", "remove", "--color=always", "-y"] + packages)
     except subprocess.CalledProcessError as e:
-        print(f"Error removing packages: {e.stderr}")
+        print(f"Removal failed: {e.stderr}")
     except subprocess.TimeoutExpired:
-        print("Error: Package removal timed out. Try running 'sudo dnf5 remove' manually or check for system issues.")
+        print("Removal timed out. Try 'sudo dnf5 remove' manually.")
     except PermissionError:
-        print("Error: Permission denied. Run 'day remove' with sudo (e.g., 'sudo day remove <package>').")
+        print("Permission denied. Run 'day remove' with sudo (e.g., 'sudo day remove <package>').")

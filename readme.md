@@ -50,12 +50,12 @@ dnf5
 pyinstaller
 ```
 <br>
-For installation on just build it and put it in your `/bin`
+For installation on just build it and put it in your `$PATH` this can be your system or local directory
 
 ```sh
 
 pyinstaller --onefile --name day day.py
-mv day /bin
+mv day ~/.local/bin
 ```
 
 ### Installing the bash version
