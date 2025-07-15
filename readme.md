@@ -33,10 +33,13 @@
 
 ## Installation
 
-Clone this repository:
+Clone this repository
 ```sh
 git clone https://github.com/Dragon-Chicken/day
 ```
+
+### Installing the python version
+
 Install the Dependencies
 ```
 python3
@@ -48,12 +51,16 @@ pyinstaller
 ```
 <br>
 For installation on just build it and put it in your `/bin`
-
 ```sh
 pyinstaller --onefile --name day day.py
 mv day /bin
 ```
 
+### Installing the bash version
+```sh
+mv day.sh ~/.local/bin
+echo "alias day=". ~/.local/bin/day.sh""
+```
 
 ## Manual
 
