@@ -204,7 +204,6 @@ if [ $removeflag -eq 1 ]; then
 
       # copr stuff...
       # testing...
-      : '
       if ! [ -z "$(dnf copr list | grep "$packagetoremove")" ]; then
         echo "Package $packagetoremove was installed with copr."
         read -p "Remove the copr repo? [Y/n]: " option
@@ -214,7 +213,6 @@ if [ $removeflag -eq 1 ]; then
         #sudo dnf copr remove "${coprrepotoremove#*/}"
 
       fi
-      '
 
     fi
     i+=1
