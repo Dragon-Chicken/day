@@ -55,6 +55,9 @@ fi
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   dayhelp
   return
+elif [ "$1" = "--help-dnf" ]; then
+  dnf --help
+  return
 fi
 
 if [ -z "$2" ]; then
@@ -65,40 +68,43 @@ fi
 ############
 # COMMANDS #
 ############
-for (( i=0; i<${#1}; i++ )); do
-  char="${1:i:1}"
+
+case $1 in
+  "install" | "Install" | "i" | "I" | "in" | "In")
+    installflag=1
+
+    if [ ${1:0:1} = "I" ]; then
+      nosearch=1
+    fi
+  ;;
+
+  "remove" | "rm")
+    removeflag=1
+  ;;
+
+  "search")
+    searchflag=1
+  ;;
   
-  case $char in
-    "i" | "I")
-      installflag=1
+  "upgrade" | "ug" | "upg")
+    upgradeflag=1
+  ;;
 
-      if [ $char = "I" ]; then
-        nosearch=1
-      fi
-    ;;
+  # list ls
 
-    "r")
-      removeflag=1
-    ;;
+  # download, dw
 
-    "u")
-      upgradeflag=1
-    ;;
+  # cl
 
-    "q")
-      searchflag=1
-    ;;
+  *)
+    echo "passing through dnf"
+    return
+esac
 
-#    "c")
-#      coprflag=1
-#    ;;
 
-    *)
-      echo "invalid argument(s)"
-      return
-    ;;
-  esac
-done
+# need to combine shit into one string first
+# rather than doing it in each if
+
 
 ##########
 # SEARCH #
@@ -152,7 +158,7 @@ if [ $installflag -eq 1 ]; then
       grepout=$(dnf -q search $input | grep -i $input)
 
       if [ -z "$grepout" ]; then
-        echo "Can't find package: $input"
+        echo "can't find package: $input"
         return
       fi
       
@@ -164,14 +170,17 @@ if [ $installflag -eq 1 ]; then
 
       if [ $grepoutlines -gt 1 ]; then
         while [ $validinput -ne 1 ]; do
-          echo "Select an option:"
+          echo "select an option:"
           echo "$grepout" | cat -n
           read -p "> " option
 
-          if ! [[ $option =~ "^[0-9]+$" ]] || [ $option -lt 1 ] || [ $option -gt $grepoutlines ]; then
-            echo "Please pick a valid number"
-          else
-            validinput=1
+          if ! [[ $option =~ "^[0-9]+$" ]]; then
+            if [[ $option -lt 1 ]] || [[ $option -gt $grepoutlines ]]; then
+              echo "please pick a valid number"
+              echo "|$option| |$option -lt 1| |$option -gt $grepoutlines|"
+            else
+              validinput=1
+            fi
           fi
         done
       fi
@@ -199,7 +208,7 @@ if [ $installflag -eq 1 ]; then
   return
 fi
 
-##########
+########## !! TO ADD -F AND --FORCE SUPPORT !!
 # REMOVE #
 ##########
 if [ $removeflag -eq 1 ]; then
@@ -215,7 +224,7 @@ if [ $removeflag -eq 1 ]; then
       grepout=$(dnf -q list --installed "*$input*" | grep -i "$input")
 
       if [ -z "$grepout" ]; then
-        echo "Can't find package: $input"
+        echo "can't find package: $input"
         return
       fi
       
@@ -227,12 +236,12 @@ if [ $removeflag -eq 1 ]; then
 
       if [ $grepoutlines -gt 1 ]; then
         while [ $validinput -ne 1 ]; do
-          echo "Select an option:"
+          echo "select an option:"
           echo "$grepout" | cat -n
           read -p "> " option
 
           if ! [[ $option =~ "^[0-9]+$" ]] || [ $option -lt 1 ] || [ $option -gt $grepoutlines ]; then
-            echo "Please pick a valid number"
+            echo "please pick a valid number"
           else
             validinput=1
           fi
@@ -249,7 +258,7 @@ if [ $removeflag -eq 1 ]; then
       # copr stuff...
       # testing...
       if ! [ -z "$(dnf copr list | grep "$packagetoremove")" ]; then
-        echo "Package $packagetoremove was installed with copr."
+        echo "package $packagetoremove was installed with copr."
         read -p "Remove the copr repo? [Y/n]: " option
 
         coprrepotoremove=$(dnf copr list | grep "$packagetoremove")
