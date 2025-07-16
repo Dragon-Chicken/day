@@ -18,6 +18,10 @@
 > This Tool will Likely be rewritten
 > in Golang or C++ in the future 
 
+> [!IMPORTANT]
+> This tool is available in both python and bash. <br>
+> The python version (day.py) is by Welpyes and the bash version (day.sh) is by DragonChicken.
+
 ## Table Of Contents
 - [Features](#Features)
 - [Installation](#Installation)
@@ -61,7 +65,7 @@ mv day ~/.local/bin
 ### Installing the bash version
 ```sh
 mv day.sh ~/.local/bin
-echo "alias day=". ~/.local/bin/day.sh""
+echo 'alias day=". ~/.local/bin/day.sh"' >> ~/.bashrc
 ```
 
 ## Manual
