@@ -1,1 +1,3 @@
+# ignore the pycache dir
+# reason: https://www.google.com/search?q=pycache
 __pycache__/
