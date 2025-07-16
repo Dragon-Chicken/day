@@ -9,14 +9,32 @@ coprflag=0
 
 nosearch=0
 
-#########
-# FLAGS #
-#########
-if [ -z "$2" ] || [ -z "$1" ]; then
+##########
+# CHECKS #
+##########
+if [ -z "$1" ]; then
   echo "missing argument(s)"
+  echo "use day --help for more info"
   return
 fi
 
+#############
+# HELP TEXT #
+#############
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "this is the help text"
+  return
+fi
+
+if [ -z "$2" ]; then
+  echo "missing argument(s)"
+  echo "type day --help for more info"
+  return
+fi
+
+#########
+# FLAGS #
+#########
 for (( i=0; i<${#1}; i++ )); do
   char="${1:i:1}"
   
@@ -80,7 +98,6 @@ fi
 
 ################
 # COPR INSTALL #
-# I hate copr. #
 ################
 coprinstall() {
   sudo dnf copr enable $1
