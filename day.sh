@@ -9,26 +9,56 @@ coprflag=0
 
 nosearch=0
 
+#############
+# HELP TEXT #
+######################
+# TO DO:             #
+# sync the python    #
+# and bash project's #
+# help text and      #
+# other things       #
+######################
+dayhelp() {
+  echo \
+"usage: day [options] [command] [arguments...]
+
+Day - Dnf Assisted Yank, a dnf wrapper with quality of life features
+
+positional arguments:
+  command     Command to execute
+  args        Additional arguments
+
+options:
+  -h, --help  Show this help message
+  --help-dnf  Show DNF5 help
+
+Commands:
+search, copr search, install (i, in), remove (rm, -f/--force), upgrade (ug, upg), list (ls), download (dw), cl, advisory <subcommand>, copr <subcommand>, history <subcommand>, or any dnf5 command.
+Use 'day --help-dnf' for DNF5 help."
+  return
+}
+
+daymissing() {
+  echo "missing argument(s)"
+  echo "use 'day --help' for more info"
+  return
+}
+
 ##########
 # CHECKS #
 ##########
 if [ -z "$1" ]; then
-  echo "missing argument(s)"
-  echo "use day --help for more info"
+  daymissing
   return
 fi
 
-#############
-# HELP TEXT #
-#############
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  echo "this is the help text"
+  dayhelp
   return
 fi
 
 if [ -z "$2" ]; then
-  echo "missing argument(s)"
-  echo "type day --help for more info"
+  daymissing
   return
 fi
 
@@ -59,9 +89,9 @@ for (( i=0; i<${#1}; i++ )); do
       searchflag=1
     ;;
 
-    "c")
-      coprflag=1
-    ;;
+#    "c")
+#      coprflag=1
+#    ;;
 
     *)
       echo "invalid argument(s)"
@@ -79,9 +109,7 @@ if [ $searchflag -eq 1 ]; then
   i=1
   for input in "$@"; do
     if [ $i -ne 1 ]; then
-
       searchstring+="$input "
-
     fi
     i+=1
   done
