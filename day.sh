@@ -62,9 +62,9 @@ if [ -z "$2" ]; then
   return
 fi
 
-#########
-# FLAGS #
-#########
+############
+# COMMANDS #
+############
 for (( i=0; i<${#1}; i++ )); do
   char="${1:i:1}"
   
@@ -165,15 +165,14 @@ if [ $installflag -eq 1 ]; then
       if [ $grepoutlines -gt 1 ]; then
         while [ $validinput -ne 1 ]; do
           echo "Select an option:"
-          echo "$grepout"
-          read -p "> " option 
+          echo "$grepout" | cat -n
+          read -p "> " option
 
-          if [ $option -lt 1 ] || [ $option -gt $grepoutlines ]; then
+          if ! [[ $option =~ "^[0-9]+$" ]] || [ $option -lt 1 ] || [ $option -gt $grepoutlines ]; then
             echo "Please pick a valid number"
           else
             validinput=1
           fi
-
         done
       fi
 
@@ -229,10 +228,10 @@ if [ $removeflag -eq 1 ]; then
       if [ $grepoutlines -gt 1 ]; then
         while [ $validinput -ne 1 ]; do
           echo "Select an option:"
-          echo "$grepout"
-          read -p "> " option 
+          echo "$grepout" | cat -n
+          read -p "> " option
 
-          if [ $option -lt 1 ] || [ $option -gt $grepoutlines ]; then
+          if ! [[ $option =~ "^[0-9]+$" ]] || [ $option -lt 1 ] || [ $option -gt $grepoutlines ]; then
             echo "Please pick a valid number"
           else
             validinput=1
