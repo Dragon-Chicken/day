@@ -1,13 +1,21 @@
 #!/bin/bash
 
+# idk bash that well... sorry..
+
+###########
+# vars... #
+###########
 installflag=0
 removeflag=0
 searchflag=0
 upgradeflag=0
+listflag=0
+downloadflag=0
+cleanflag=0
 
-coprflag=0
+coprflag=0 # will be removed
 
-nosearch=0
+nosearch=0 # might be removed
 
 #############
 # HELP TEXT #
@@ -70,12 +78,8 @@ fi
 ############
 
 case $1 in
-  "install" | "Install" | "i" | "I" | "in" | "In")
+  "install" | "i" | "in")
     installflag=1
-
-    if [ ${1:0:1} = "I" ]; then
-      nosearch=1
-    fi
   ;;
 
   "remove" | "rm")
@@ -95,6 +99,7 @@ case $1 in
   # download, dw
 
   # cl
+  # the command is dnf clean all
 
   *)
     echo "passing through dnf"
@@ -102,8 +107,25 @@ case $1 in
 esac
 
 
-# need to combine shit into one string first
-# rather than doing it in each if
+# combines the args but does not search for them.
+# this can then be passed around in functions
+combinedargs=""
+
+i=0
+for input in "$@"; do
+  i+=1
+
+  # I *think* I have to do this (using both i and for loop indexing)
+  if [ $i -eq 1 ]; then
+    continue
+  fi
+
+  combinedargs+="$input "
+done
+
+combinedargs=${combinedargs% }
+
+echo "|$combinedargs|" #debug
 
 
 ##########
@@ -143,6 +165,7 @@ coprinstall() {
 ###########
 if [ $installflag -eq 1 ]; then
 
+  # this MUST GO!
   if [ $coprflag -eq 1 ]; then
     coprinstall $2
   fi
@@ -153,55 +176,54 @@ if [ $installflag -eq 1 ]; then
 
   i=1
   for input in "$@"; do
-    if [ $i -ne 1 ] && [ $nosearch -eq 0 ]; then
 
-      grepout=$(dnf -q search $input | grep -i $input)
-
-      if [ -z "$grepout" ]; then
-        echo "can't find package: $input"
-        return
-      fi
-      
-      grepoutlines=$(dnf -q search $input | grep -c -i $input)
-      #echo $grepoutlines # debug
-      
-      option=0
-      validinput=0
-
-      if [ $grepoutlines -gt 1 ]; then
-        while [ $validinput -ne 1 ]; do
-          echo "select an option:"
-          echo "$grepout" | cat -n
-          read -p "> " option
-
-          if ! [[ $option =~ "^[0-9]+$" ]]; then
-            if [[ $option -lt 1 ]] || [[ $option -gt $grepoutlines ]]; then
-              echo "please pick a valid number"
-              echo "|$option| |$option -lt 1| |$option -gt $grepoutlines|"
-            else
-              validinput=1
-            fi
-          fi
-        done
-      fi
-
-      readarray -t splitarray <<<"$grepout"
-
-      packagetoinstall=${splitarray[$option -1]%%.*}
-      packagetoinstall=${packagetoinstall:1}
-
-      installstring+="$packagetoinstall "
-
-    elif [ $i -ne 1 ]; then
-      installstring+="$input "
+    # I *think* I have to do this (using both i and for loop indexing)
+    if [ $i -eq 1 ]; then
+      i+=1
+      continue
     fi
+
+    grepout=$(dnf -q search $input | grep -i $input)
+
+    if [ -z "$grepout" ]; then
+      echo "can't find package: $input"
+      return
+    fi
+    
+    grepoutlines=$(dnf -q search $input | grep -c -i $input)
+    #echo $grepoutlines # debug
+    
+    option=0
+    validinput=0
+
+    while [ $grepoutlines -gt 1 ] && [ $validinput -ne 1 ]; do
+      echo "select an option:"
+      echo "$grepout" | cat -n
+      read -p "> " option
+
+      if ! [[ $option =~ "^[0-9]+$" ]]; then
+        if [[ $option -lt 1 ]] || [[ $option -gt $grepoutlines ]]; then
+          echo "please pick a valid number"
+          echo "|$option| |$option -lt 1| |$option -gt $grepoutlines|"
+        else
+          validinput=1
+        fi
+      fi
+    done
+
+    readarray -t splitarray <<<"$grepout"
+
+    packagetoinstall=${splitarray[$option -1]%%.*}
+    packagetoinstall=${packagetoinstall:1}
+
+    installstring+="$packagetoinstall "
 
     i+=1
   done
   
   installstring=${installstring% }
 
-  #echo "|$installstring|" #debug
+  echo "|$installstring|" #debug
 
   sudo dnf install $installstring
 
