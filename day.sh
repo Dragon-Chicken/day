@@ -125,7 +125,7 @@ done
 
 combinedargs=${combinedargs% }
 
-echo "|$combinedargs|" #debug
+echo "combinedargs |$combinedargs|"
 
 
 ##########
@@ -143,12 +143,13 @@ if [ $searchflag -eq 1 ]; then
   done
   
   searchstring=${searchstring% }
+  # url formatting for copr
   coprsearchstring=$(echo "$searchstring" | sed "s/\//%2F/g" | sed "s/\ /+/g")
 
-  echo "copr search: "
+  echo "copr search:"
   echo "https://copr.fedorainfracloud.org/coprs/fulltext/?projectname=$coprsearchstring"
 
-  echo "dnf search: "
+  echo "dnf search:"
   dnf search "$searchstring"
 fi
 
@@ -160,18 +161,105 @@ coprinstall() {
   sudo dnf install ${1#*/}
 }
 
+
+
+# search for a package
+# this is a function that takes in a single package and searches for it
+# would return the found package
+searchpkg() {
+  grepout=$(dnf -q search $1 | grep -i $1)
+}
+
+
+
 ###########
 # INSTALL #
 ###########
 if [ $installflag -eq 1 ]; then
 
   # this MUST GO!
-  if [ $coprflag -eq 1 ]; then
-    coprinstall $2
-  fi
+  #if [ $coprflag -eq 1 ]; then
+  #  coprinstall $2
+  #fi
 
   installstring=""
-  
+
+  # loops through the packges
+  for package in $combinedargs; do
+
+    # check if package name is correct
+    searched=$(dnf -q search $package | grep -i " $package\.")
+    echo "package |$package|" # debug
+    echo "searched |$searched|" # debug
+
+    # if the package is found add it to installing
+    if ! [[ -z "$searched" ]]; then
+      installstring+="$package "
+      continue
+    fi
+
+    echo "package '$package' does not exist"
+    echo "searching for package..."
+
+    # maybe it should check and see if the number of lines is a lot
+    # if it is a lot then maybe a strict search?
+    grepoutlines=$(dnf -q search $package | grep -c -i $package)
+
+    if [[ $grepoutlines -gt 20 ]]; then
+      echo "output > 20 lines
+using strict search"
+    fi
+
+    grepout=$(dnf -q search $package | grep -i $package)
+
+    if [[ $grepoutlines -eq 1 ]]; then
+      echo "only one package"
+      continue
+    fi
+
+    validinput=0
+
+    while [[ $validinput -ne 1 ]]; do
+      echo "select an option:"
+      echo "$grepout" | cat -n
+      read -p "> " input
+
+      # if input is not a number
+      if ! [[ $input =~ "^[0-9]+$" ]]; then
+        if [[ $input -lt 1 ]] || [[ $input -gt $grepoutlines ]]; then
+          echo "please pick a valid number"
+          #echo "|$input| |$input -lt 1| |$input -gt $grepoutlines|"
+        else
+          validinput=1
+        fi
+      fi
+
+    done
+
+    # I think I need to split into an array to index it
+    readarray -t splitarray <<<"$grepout"
+
+    # formatting it to get 'pkgname '
+    package=${splitarray[$input -1]%%.*}
+    package=${package:1}
+
+    installstring+="$package "
+
+  done
+
+  #have to delete the last ' ' (space) from the string
+  installstring=${installstring% }
+
+  echo "installstring |$installstring|" # debug
+
+  return
+
+  # first try installing
+  # we still have to "search" for the package
+  sudo dnf install $combinedargs
+
+  # then search and install
+
   echo "searching for package(s)"
 
   i=1
